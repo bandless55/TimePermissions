@@ -71,7 +71,10 @@ public class TimePermissions extends JavaPlugin {
         if (!folder.exists()){
         	folder.mkdir();
         }
+        
+        // Settings config file
         this.settingsFile=new File(folder.getAbsolutePath(),"config.yml");
+        // Player data file
         this.dataFile=new File(folder.getAbsolutePath(),"data.yml");
         
     	try {
@@ -82,15 +85,13 @@ public class TimePermissions extends JavaPlugin {
     			this.dataFile.createNewFile();
     		}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
         }		
     }
     
     public void setupPermissions() {
+    	// Setup the 'Permissions' plugin 
     	Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
-
-
     	if(this.Permissions == null) {
     	    if(test != null) {
     		this.Permissions = ((Permissions)test).getHandler();
