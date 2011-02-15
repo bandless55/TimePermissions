@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
@@ -7,3 +8,14 @@
 	<classpathentry kind="lib" path="C:/Users/Porter/My Dropbox/Minecraft/Bukkit/plugins/Permissions.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
+=======
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Porter/My Dropbox/Minecraft/Bukkit/bukkit.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Porter/My Dropbox/Minecraft/Bukkit/snakeyaml-1.7.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Porter/My Dropbox/Minecraft/Bukkit/plugins/Permissions.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
+>>>>>>> 983e5c0a0efaa86c8ed897ee584f6bcfd0d90903
