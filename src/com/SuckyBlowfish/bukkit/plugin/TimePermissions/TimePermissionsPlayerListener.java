@@ -35,7 +35,7 @@ public class TimePermissionsPlayerListener extends PlayerListener {
     }
 
     public void onPlayerItem(PlayerItemEvent event){
-    	if(!plugin.playerCanUseItem(event.getPlayer(),event.getItem().getType())){
+    	if(!plugin.playerCanUseItem(event.getPlayer(),event.getItem().getType().getId())){
     		event.setCancelled(true);
     	}
     }
