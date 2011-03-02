@@ -129,7 +129,7 @@ public class TimePermissions extends JavaPlugin {
 		
 		long writeDelay = parseTime((String)((Map<String,Object>) settings).get("WriteDelay"));
 		
-		setupPermissions();
+		//setupPermissions();
 		
 		timeUpdateTimer = new Timer();
 		timeUpdateTimer.scheduleAtFixedRate(new timeUpdateTask(),1000,1000);
