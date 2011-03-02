@@ -26,15 +26,16 @@ public class TimePermissionsPlayerListener extends PlayerListener {
     public void onPlayerJoin(PlayerEvent event){
     	String playerName = event.getPlayer().getName();
     	if (!plugin.playerConfigTime.containsKey(playerName))plugin.playerConfigTime.put(playerName, 0);
-    	//event.getPlayer().getInventory().addItem(new ItemStack(Material.WATER_BUCKET, 1));
-    	//event.getPlayer().getInventory().addItem(new ItemStack(Material.LAVA_BUCKET, 1));
+    	plugin.playerConfigLastOnline.put(playerName, 0);
     }
     
     public void onPlayerQuit(PlayerEvent event){
-    	
+    	String playerName = event.getPlayer().getName();
+    	plugin.playerConfigLastOnline.put(playerName, ((Long)(System.currentTimeMillis()/1000)).intValue());
     }
 
     public void onPlayerItem(PlayerItemEvent event){
+    	String playerName = event.getPlayer().getName();
     	if(!plugin.playerCanUseItem(event.getPlayer(),event.getItem().getType().getId())){
     		event.setCancelled(true);
     	}

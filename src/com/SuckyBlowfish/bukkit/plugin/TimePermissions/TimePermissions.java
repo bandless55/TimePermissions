@@ -46,6 +46,9 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
 
+import com.nijiko.permissions.PermissionHandler;
+import com.nijikokun.bukkit.Permissions.Permissions;
+
 /**
  * TimeControls for Bukkit
  *
@@ -59,7 +62,7 @@ public class TimePermissions extends JavaPlugin {
     public HashMap<String, Integer> playerConfigLastOnline = new HashMap<String, Integer>();
     public HashMap<Integer,HashMap> configItems = new HashMap<Integer,HashMap>();
     public HashMap<Integer, String> configGroups = new HashMap<Integer, String>();
-//    public static PermissionHandler Permissions = null;
+    public static PermissionHandler Permissions = null;
     private File settingsFile;
     private File dataFile;
     private Timer timeUpdateTimer;
@@ -124,8 +127,9 @@ public class TimePermissions extends JavaPlugin {
 		playerConfigLastOnline = (HashMap<String, Integer>) times.get("LastOnline");
 		System.out.println(playerConfigTime);
 		
-		
 		long writeDelay = parseTime((String)((Map<String,Object>) settings).get("WriteDelay"));
+		
+		setupPermissions();
 		
 		timeUpdateTimer = new Timer();
 		timeUpdateTimer.scheduleAtFixedRate(new timeUpdateTask(),1000,1000);
@@ -146,8 +150,7 @@ public class TimePermissions extends JavaPlugin {
         	System.out.println(player.getName());
         }
     }
-    public void onDisable() {
-    	savePlayerTimes();   	
+    public void onDisable() {  	
     	timeUpdateTimer.cancel(); 	
     	dataSaveTimer.cancel();
     }
@@ -222,7 +225,21 @@ public class TimePermissions extends JavaPlugin {
     	       (minutes<1 ? "" : ((weeks>0|days>0|hours>0)?", ":"")+(minutes<2 ? minutes+" minute" : minutes+" minutes") )+
     	       (seconds<1 ? "" : (seconds<2 ? ((weeks>0|days>0|hours>0|minutes>0)?", and ":"")+seconds+" second!"  : ((weeks>0|days>0|hours>0|minutes>0)?", and ":"")+seconds+" seconds." ) );
     }
-    
+    public void setupPermissions() {
+    	Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
+    	PluginDescriptionFile pdfFile = this.getDescription();
+    		
+    	if (this.Permissions == null) {
+    		if (test!= null) {
+    			this.getServer().getPluginManager().enablePlugin(test);
+    			this.Permissions = ((Permissions) test).getHandler();
+    		}
+    		else {
+    			getServer().getLogger().info(pdfFile.getName() + " version " + pdfFile.getVersion() + "not enabled. Permissions not detected");
+    			this.getServer().getPluginManager().disablePlugin(this);
+    		}
+    	}
+    }
     public String secondsToStringTruncated(int time){
     	int weeks = time / 604800;
     	int r = time % 604800;
@@ -317,7 +334,7 @@ public class TimePermissions extends JavaPlugin {
     public void refreshPlayerTimes(){
     	Player[] players = getServer().getOnlinePlayers();
     	for(int i = 0; i < players.length; i++){
-    		playerConfigTime.put(players[i].getName(),playerConfigTime.get(players[i].getName())+1);    		
+    		playerConfigTime.put(players[i].getName(),playerConfigTime.get(players[i].getName())+1); 	
     	}
     }
     class timeUpdateTask extends TimerTask{
