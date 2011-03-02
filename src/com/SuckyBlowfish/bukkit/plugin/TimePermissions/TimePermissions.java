@@ -122,10 +122,8 @@ public class TimePermissions extends JavaPlugin {
 			
 			configGroups.put(parseTime(((Map<String,String>)m.getValue()).get("Time")), m.getKey());
 		}
-		System.out.println(times);
 		playerConfigTime = (HashMap<String, Integer>) times.get("Times");
 		playerConfigLastOnline = (HashMap<String, Integer>) times.get("LastOnline");
-		System.out.println(playerConfigTime);
 		
 		long writeDelay = parseTime((String)((Map<String,Object>) settings).get("WriteDelay"));
 		
@@ -146,9 +144,6 @@ public class TimePermissions extends JavaPlugin {
         // EXAMPLE: Custom code, here we just output some info so we can check all is well
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println( pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!" );
-        for(Player player: getServer().getOnlinePlayers()){
-        	System.out.println(player.getName());
-        }
     }
     public void onDisable() {  	
     	timeUpdateTimer.cancel(); 	
