@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -55,6 +56,7 @@ public class TimePermissions extends JavaPlugin {
     private final TimePermissionsBlockListener blockListener = new TimePermissionsBlockListener(this);
     private final HashMap<Player, Boolean> debugees = new HashMap<Player, Boolean>();
     public HashMap<String, Integer> playerConfigTime = new HashMap<String, Integer>();
+    public HashMap<String, Integer> playerConfigLastOnline = new HashMap<String, Integer>();
     public HashMap<Integer,HashMap> configItems = new HashMap<Integer,HashMap>();
     public HashMap<Integer, String> configGroups = new HashMap<Integer, String>();
 //    public static PermissionHandler Permissions = null;
@@ -117,9 +119,9 @@ public class TimePermissions extends JavaPlugin {
 			
 			configGroups.put(parseTime(((Map<String,String>)m.getValue()).get("Time")), m.getKey());
 		}
-		
-		
-		playerConfigTime = (HashMap<String, Integer>) times.get("Players");
+		System.out.println(times);
+		playerConfigTime = (HashMap<String, Integer>) times.get("Times");
+		playerConfigLastOnline = (HashMap<String, Integer>) times.get("LastOnline");
 		System.out.println(playerConfigTime);
 		
 		
@@ -184,6 +186,13 @@ public class TimePermissions extends JavaPlugin {
     							trimmedArgs[1]+
     							" has played for "+
     							secondsToString(playerConfigTime.get(trimmedArgs[1])));
+    					sender.sendMessage(ChatColor.GREEN+"This player "+
+    							(Arrays.asList(getServer().getOnlinePlayers()).contains(getServer().getPlayer(trimmedArgs[1]))
+    								? "is currently online!" 
+    								: "was last online "+
+    								secondsToStringTruncated((Integer)( ((Long)(System.currentTimeMillis()/1000)).intValue() -
+    										(playerConfigLastOnline.get(trimmedArgs[1])) ))+
+    								" ago."));
     					return true;
     				}else{
     					sender.sendMessage(ChatColor.RED+"Specified player does not exist.");
@@ -212,6 +221,26 @@ public class TimePermissions extends JavaPlugin {
     	       (hours  <1 ? "" : ((weeks>0|days>0)?", ":"")+(hours<2   ? hours  +" hour"   : hours  +" hours"  ) )+
     	       (minutes<1 ? "" : ((weeks>0|days>0|hours>0)?", ":"")+(minutes<2 ? minutes+" minute" : minutes+" minutes") )+
     	       (seconds<1 ? "" : (seconds<2 ? ((weeks>0|days>0|hours>0|minutes>0)?", and ":"")+seconds+" second!"  : ((weeks>0|days>0|hours>0|minutes>0)?", and ":"")+seconds+" seconds." ) );
+    }
+    
+    public String secondsToStringTruncated(int time){
+    	int weeks = time / 604800;
+    	int r = time % 604800;
+    	int days = r / 86400;
+    	r = r % 86400;
+    	int hours = r / 3600;
+    	r = r % 3600;
+    	int minutes = r / 60;
+    	r = r % 60;
+    	int seconds = r;
+    	
+//    		   (var    <1 ? "" : (var<2     ? var    +" var "     : var    +" vars "    ) )
+    	return (weeks>1 || days>1 || hours>1)
+    		   ?   (weeks  <1 ? "" : (weeks<2   ? weeks  +" week"   : weeks  +" weeks"  ) )+
+    			   (days   <1 ? "" : ((weeks>0)?", ":"")+(days<2    ? days   +" day"    : days   +" days"   ) )+
+    	           (hours  <1 ? "" : ((weeks>0|days>0)?", and ":"")+(hours<2   ? hours  +" hour"   : hours  +" hours"  ) )
+    	           
+    	       :   (minutes<1 ? "not long" : ((weeks>0|days>0|hours>0)?", ":"")+(minutes<2 ? minutes+" minute" : minutes+" minutes") );
     }
     private Player matchPlayer(String playerName, CommandSender sender) {
         Player player;
@@ -271,9 +300,13 @@ public class TimePermissions extends JavaPlugin {
         debugees.put(player, value);
     }
     public void savePlayerTimes(){
+    	Integer now = ((Long)(System.currentTimeMillis()/1000)).intValue();
+    	for (Player p : getServer().getOnlinePlayers()){
+    		playerConfigLastOnline.put(p.getName(), now);
+    	}
     	Map<String,Map> map = new HashMap<String,Map>();
-    	map.put("Players", playerConfigTime);
-    	
+    	map.put("Times", playerConfigTime);
+    	map.put("LastOnline", playerConfigLastOnline);
 		try {
 			yaml.dump(map, new FileWriter(dataFile));
 		} catch (IOException e) {
