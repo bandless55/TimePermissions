@@ -6,7 +6,6 @@ import org.bukkit.Material;
 import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPhysicsEvent;
-import org.bukkit.event.block.BlockRightClickEvent;
 
 /**
  * TimeControls block listener
@@ -15,7 +14,7 @@ import org.bukkit.event.block.BlockRightClickEvent;
 public class TimePermissionsBlockListener extends BlockListener {
     private final TimePermissions plugin;
 
-    public TimePermissionsBlockListener(final TimePermissions plugin) {
+    public TimePermissionsBlockListener(TimePermissions plugin) {
         this.plugin = plugin;
     }
 }

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Timer;
@@ -46,9 +47,6 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.DumperOptions.FlowStyle;
 import org.yaml.snakeyaml.Yaml;
 
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
-
 /**
  * TimeControls for Bukkit
  *
@@ -58,17 +56,20 @@ public class TimePermissions extends JavaPlugin {
     private final TimePermissionsPlayerListener playerListener = new TimePermissionsPlayerListener(this);
     private final TimePermissionsBlockListener blockListener = new TimePermissionsBlockListener(this);
     private final HashMap<Player, Boolean> debugees = new HashMap<Player, Boolean>();
-    public HashMap<String, Integer> playerConfigTime = new HashMap<String, Integer>();
-    public HashMap<String, Integer> playerConfigLastOnline = new HashMap<String, Integer>();
+    
+    //public HashMap<String, Integer> playerConfigTime = new HashMap<String, Integer>();
     public HashMap<Integer,HashMap> configItems = new HashMap<Integer,HashMap>();
     public HashMap<Integer, String> configGroups = new HashMap<Integer, String>();
-    public static PermissionHandler Permissions = null;
-    private File settingsFile;
-    private File dataFile;
+    
+    public int writeDelay;
+    public TimeHolder timeHolder = new TimeHolder(this);
+    
+    public File settingsFile;
+    public File playerDataFile;
     private Timer timeUpdateTimer;
     private Timer dataSaveTimer;
     public long initialTime = System.currentTimeMillis();
-    Yaml yaml = null;   
+    Yaml yaml = null;
 
     public void onEnable() {
     	DumperOptions options = new DumperOptions();
@@ -76,132 +77,109 @@ public class TimePermissions extends JavaPlugin {
         options.setIndent(4);
         options.setDefaultFlowStyle(FlowStyle.BLOCK);
         yaml = new Yaml(options);
-        // TODO: Place any custom enable code here including the registration of any events
-    	File folder = this.getDataFolder(); 
-    	  if (!folder.exists()){
-          	folder.mkdir();
-          }
-          
-          // Settings config file
-          this.settingsFile=new File(folder.getAbsolutePath(),"config.yml");
-          // Player data file
-          this.dataFile=new File(folder.getAbsolutePath(),"data.yml");
-          
-      	try {
-      		if (!this.settingsFile.exists()){
-      			this.settingsFile.createNewFile();
-      		}
-      		if (!this.dataFile.exists()){
-      			this.dataFile.createNewFile();
-      		}
-  		} catch (IOException e) {
-  			e.printStackTrace();
-          }	
-  		
-    	Map<String, Object> settings = null;
-    	Map<String, Map> times = null;
-		try {
-			settings = (Map<String, Object>)yaml.load(new FileInputStream(settingsFile));
-			times = (Map<String,Map>)yaml.load(new FileInputStream(dataFile));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		for (Entry<Integer, Map> m : ((Map<Integer,Map>)settings.get("Items")).entrySet()){
-			HashMap nodeConfig = new HashMap();
-			
-			nodeConfig.put("time", parseTime(((Map<String,String>)m.getValue()).get("Time")));
-			nodeConfig.put("name", ((Map<String,String>)m.getValue()).get("Name"));
-			
-			configItems.put(m.getKey(), nodeConfig);
-		}
-		
-		for (Entry<String, Map> m : ((Map<String,Map>)settings.get("Groups")).entrySet()){
-			HashMap nodeConfig = new HashMap();
-			
-			configGroups.put(parseTime(((Map<String,String>)m.getValue()).get("Time")), m.getKey());
-		}
-		playerConfigTime = (HashMap<String, Integer>) times.get("Times");
-		playerConfigLastOnline = (HashMap<String, Integer>) times.get("LastOnline");
-		
-		long writeDelay = parseTime((String)((Map<String,Object>) settings).get("WriteDelay"));
-		
-		//setupPermissions();
-		
-		timeUpdateTimer = new Timer();
-		timeUpdateTimer.scheduleAtFixedRate(new timeUpdateTask(),1000,1000);
-		
-		dataSaveTimer = new Timer();
-		dataSaveTimer.scheduleAtFixedRate(new dataSaveTask(),writeDelay,writeDelay);
+        
+    	loadData();
+    	
+		timeHolder.start();
 		
         // Register our events
         PluginManager pm = getServer().getPluginManager();
-        pm.registerEvent(Type.PLAYER_JOIN, playerListener, Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_QUIT, playerListener, Priority.Normal, this);
-        pm.registerEvent(Type.PLAYER_ITEM, playerListener, Priority.Normal, this);
+        pm.registerEvent(Type.PLAYER_JOIN, playerListener, Priority.Lowest, this);
+        pm.registerEvent(Type.PLAYER_QUIT, playerListener, Priority.Lowest, this);
+        pm.registerEvent(Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
         
         // EXAMPLE: Custom code, here we just output some info so we can check all is well
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println( pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!" );
     }
+    public void loadData(){
+    	File folder = this.getDataFolder(); 
+  	  	if (!folder.exists()){
+        	folder.mkdir();
+        }
+        
+        // Settings config file
+        settingsFile=new File(folder.getAbsolutePath(),"config.yml");
+        // Player data file
+        playerDataFile=new File(folder.getAbsolutePath(),"data");
+        
+    	try {
+    		if (!this.settingsFile.exists()){
+    			this.settingsFile.createNewFile();
+    		}
+    		if (!this.playerDataFile.exists()){
+    			this.playerDataFile.createNewFile();
+    		}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		timeHolder.load(playerDataFile);
+		
+    }
     public void onDisable() {  	
-    	timeUpdateTimer.cancel(); 	
-    	dataSaveTimer.cancel();
+    	timeHolder.stop();
+    	timeHolder.save();
     }
     public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
-        String[] trimmedArgs = args;
         String commandName = command.getName().toLowerCase();
         
         if (commandName.equals("ptime")){
-        	if (trimmedArgs.length==0){
+        	
+        	if (args.length==0){//No args, they want to check their own time
         		if(sender instanceof Player){
-	        		int time = playerConfigTime.get(((Player)sender).getName());
+        			int time = timeHolder.getTime((Player) sender);
 	        		sender.sendMessage(ChatColor.GREEN+"You have played for "+secondsToString(time));
-	        		return true;
         		}else{
             		sender.sendMessage(ChatColor.RED+"Good one, but the you don't have a play-time!");
-            		return true;
             	}
-        	}else if (trimmedArgs.length==1){
-        		if (trimmedArgs[0].equals("unlocks")){
-            		//Display unlocks
-        		}else if (trimmedArgs[0].equals("top")){
-        			//Display top 5
-        		}else if (trimmedArgs[0].equals("save")){
-        			savePlayerTimes();
-        			sender.sendMessage(ChatColor.GREEN+"Saved all play-times to disk! "+
-        					ChatColor.DARK_AQUA+"I like waffles?");
-        			return true;
-        		}
-        	}else if (trimmedArgs.length==2){
-        		if (trimmedArgs[0].equals("top")){
-        			//Display top #
-        		}else if(trimmedArgs[0].equals("check")){
-        			//Check player's ptime
-    				if (playerConfigTime.containsKey(trimmedArgs[1])){
-    					sender.sendMessage(ChatColor.GREEN+
-    							trimmedArgs[1]+
-    							" has played for "+
-    							secondsToString(playerConfigTime.get(trimmedArgs[1])));
-    					sender.sendMessage(ChatColor.GREEN+"This player "+
-    							(Arrays.asList(getServer().getOnlinePlayers()).contains(getServer().getPlayer(trimmedArgs[1]))
-    								? "is currently online!" 
-    								: "was last online "+
-    								secondsToStringTruncated((Integer)( ((Long)(System.currentTimeMillis()/1000)).intValue() -
-    										(playerConfigLastOnline.get(trimmedArgs[1])) ))+
-    								" ago."));
-    					return true;
-    				}else{
-    					sender.sendMessage(ChatColor.RED+"Specified player does not exist.");
-    					return true;
-    				}
-
-        		}
+        	}else{//There are args!
+        		if (args[0].equals("top")){
+        			sender.sendMessage(ChatColor.DARK_PURPLE+"Doesn't work yet kthxbai!");
+        			//TODO: Also sort by world
+//	    			if (args.length==1){
+//		    			sender.sendMessage(ChatColor.DARK_PURPLE+"### TOP 5 PLAYTIMES ###");
+//	    				for(String player : timeHolder.topTime(5)){
+//	    					sender.sendMessage(ChatColor.GREEN+player+": "+secondsToString(timeHolder.getTime(player)));
+//	    				}
+//	    			}else if (args.length==2){
+//	    				int top = Integer.getInteger(args[1]);
+//	    				sender.sendMessage(ChatColor.DARK_PURPLE+"### TOP "+top+" PLAYTIMES ###");
+//	    				for(String player : timeHolder.topTime(top)){
+//	    					sender.sendMessage(ChatColor.GREEN+player+": "+secondsToString(timeHolder.getTime(player)));
+//	    				}
+//	    			}else if (args.length>2){
+//	    				sender.sendMessage(ChatColor.RED+"Too many arguments.");
+//	    			}
+	    		}else if (args[0].equals("save")){
+	    			timeHolder.save();
+	    			sender.sendMessage(ChatColor.GREEN+"All player times saved to disk!");
+	    		}else if(args[0].equals("check")||args[0].equals("c")||args[0].equals("get")){
+	    			if (args.length==1){
+	    				sender.sendMessage(ChatColor.RED+"Too few arguments.");
+	    			}else if (args.length==2){
+	    				Player victim = matchPlayer(args[1],sender);
+	    				if (victim != null){
+	    					sender.sendMessage(ChatColor.GREEN+victim.getDisplayName()+" has played for "+
+	    							secondsToStringTruncated(timeHolder.getTime(victim)));
+	    				} else {
+		    				Integer time = timeHolder.getTime(args[1]);
+	    					if (time != null){
+	    						sender.sendMessage(ChatColor.GREEN+args[1]+" has played for "+
+			    						secondsToStringTruncated(time));
+	    					} else {
+	    						sender.sendMessage(ChatColor.RED+"Player not found.");
+	    					}
+	    				}
+	    			}else if (args.length>2){
+	    				sender.sendMessage(ChatColor.RED+"Too many arguments.");
+	    			}
+	    		}
         	}
         }
-        return false;
+        return true;
     }
+
     public String secondsToString(int time){
     	int weeks = time / 604800;
     	int r = time % 604800;
@@ -218,23 +196,9 @@ public class TimePermissions extends JavaPlugin {
     		   (days   <1 ? "" : ((weeks>0)?", ":"")+(days<2    ? days   +" day"    : days   +" days"   ) )+
     	       (hours  <1 ? "" : ((weeks>0|days>0)?", ":"")+(hours<2   ? hours  +" hour"   : hours  +" hours"  ) )+
     	       (minutes<1 ? "" : ((weeks>0|days>0|hours>0)?", ":"")+(minutes<2 ? minutes+" minute" : minutes+" minutes") )+
-    	       (seconds<1 ? "" : (seconds<2 ? ((weeks>0|days>0|hours>0|minutes>0)?", and ":"")+seconds+" second!"  : ((weeks>0|days>0|hours>0|minutes>0)?", and ":"")+seconds+" seconds." ) );
+    	       (seconds<1 ? "" : (seconds<2 ? ((weeks>0|days>0|hours>0|minutes>0)?" and ":"")+seconds+" second"  : ((weeks>0|days>0|hours>0|minutes>0)?" and ":"")+seconds+" seconds" ) )+".";
     }
-    public void setupPermissions() {
-    	Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
-    	PluginDescriptionFile pdfFile = this.getDescription();
-    		
-    	if (this.Permissions == null) {
-    		if (test!= null) {
-    			this.getServer().getPluginManager().enablePlugin(test);
-    			this.Permissions = ((Permissions) test).getHandler();
-    		}
-    		else {
-    			getServer().getLogger().info(pdfFile.getName() + " version " + pdfFile.getVersion() + "not enabled. Permissions not detected");
-    			this.getServer().getPluginManager().disablePlugin(this);
-    		}
-    	}
-    }
+    
     public String secondsToStringTruncated(int time){
     	int weeks = time / 604800;
     	int r = time % 604800;
@@ -252,13 +216,12 @@ public class TimePermissions extends JavaPlugin {
     			   (days   <1 ? "" : ((weeks>0)?", ":"")+(days<2    ? days   +" day"    : days   +" days"   ) )+
     	           (hours  <1 ? "" : ((weeks>0|days>0)?", and ":"")+(hours<2   ? hours  +" hour"   : hours  +" hours"  ) )
     	           
-    	       :   (minutes<1 ? "not long" : ((weeks>0|days>0|hours>0)?", ":"")+(minutes<2 ? minutes+" minute" : minutes+" minutes") );
+    	       :   (minutes<1 ? "not long." : ((weeks>0|days>0|hours>0)?", ":"")+(minutes<2 ? minutes+" minute" : minutes+" minutes") )+".";
     }
     private Player matchPlayer(String playerName, CommandSender sender) {
         Player player;
         List<Player> players = getServer().matchPlayer(playerName);
         if (players.isEmpty()) {
-            sender.sendMessage(ChatColor.RED + "Unknown player");
             player = null;
         } else {
             player = players.get(0);
@@ -286,21 +249,6 @@ public class TimePermissions extends JavaPlugin {
     	
     	return parsedTime;
     }
-    public boolean playerCanUseItem(Player player,int materialId){
-    	if (configItems.containsKey(materialId)){
-    		if (playerConfigTime.get(player.getName()) > (Integer)(configItems.get(materialId).get("time"))/1000){
-    			return true;
-    		}else{
-    			player.sendMessage("To use "+
-    				(String)(configItems.get(materialId).get("name"))+
-    				" you must have at least "+
-    				secondsToString((Integer)(configItems.get(materialId).get("time"))/1000)+".");
-    			return false;
-    		}
-    	}else{
-    		return true;
-    	}
-    }
     public boolean isDebugging(final Player player) {
         if (debugees.containsKey(player)) {
             return debugees.get(player);
@@ -310,37 +258,6 @@ public class TimePermissions extends JavaPlugin {
     }
     public void setDebugging(final Player player, final boolean value) {
         debugees.put(player, value);
-    }
-    public void savePlayerTimes(){
-    	Integer now = ((Long)(System.currentTimeMillis()/1000)).intValue();
-    	for (Player p : getServer().getOnlinePlayers()){
-    		playerConfigLastOnline.put(p.getName(), now);
-    	}
-    	Map<String,Map> map = new HashMap<String,Map>();
-    	map.put("Times", playerConfigTime);
-    	map.put("LastOnline", playerConfigLastOnline);
-		try {
-			yaml.dump(map, new FileWriter(dataFile));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    }
-    public void refreshPlayerTimes(){
-    	Player[] players = getServer().getOnlinePlayers();
-    	for(int i = 0; i < players.length; i++){
-    		playerConfigTime.put(players[i].getName(),playerConfigTime.get(players[i].getName())+1); 	
-    	}
-    }
-    class timeUpdateTask extends TimerTask{
-    	public void run(){
-    		refreshPlayerTimes();
-    	}
-    }
-    class dataSaveTask extends TimerTask{
-    	public void run(){
-    		savePlayerTimes();
-    	}
     }
 }
 
