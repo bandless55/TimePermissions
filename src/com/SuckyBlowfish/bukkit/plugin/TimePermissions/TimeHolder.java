@@ -23,21 +23,14 @@ public class TimeHolder {
 	private final JavaPlugin plugin;
 	private ArrayList<String> mPlayerList = new ArrayList<String>();
 	private ArrayList<Integer> mTimeList = new ArrayList<Integer>();
-	private Map<String,Map<String,Integer>> TimeWorlds;
-	//TimeWorlds
-	//	|"world"
-	//	|  |"SuckyBlowfish":13124
-	//	|  |"bandless55":22313
-	//	|"world_nether"
-	//	|  |"SuckyBlowfish": 223
-	//	|  |"bandless55": 5532
+//	private ArrayList<ArrayList<Integer>> mTimeList = new ArrayList<ArrayList<Integer>>();
+	private ArrayList<String> mWorldList = new ArrayList<String>();
 	private Timer updateTimer;
 	private Timer saveTimer;
 	private File dataSaveFile = null;
 	
 	public TimeHolder(JavaPlugin plugin){
 		this.plugin = plugin;
-		TimeWorlds = new HashMap<String,Map<String,Integer>>();
 	}
 	
 	public void start(){
@@ -60,7 +53,19 @@ public class TimeHolder {
 			dataScanner = new Scanner(dataStream);
 	        while (dataScanner.hasNextLine()){
 	            String[] split = dataScanner.nextLine().split(":");
-	            addPlayer(split[0], Integer.parseInt(split[1]));
+	            if (split.length > 0){
+	            	if (split[0].startsWith("@"))continue;
+		            if (split.length==2){
+		            	int time;
+		            	try {
+		            		time = Integer.parseInt(split[1]);
+		            	} catch (NumberFormatException e){
+		            		time = 0;
+		            	}
+		            	
+		            	addPlayer(split[0], Integer.parseInt(split[1]));
+		            }
+	            }
 	        }
 		} catch (FileNotFoundException e) {
 			System.out.print("[TimePermissions] Data file not found, did *you* fuck this up?");
