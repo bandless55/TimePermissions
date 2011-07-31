@@ -37,16 +37,6 @@ import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 
-//import org.yaml.snakeyaml.*;
-//import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-
-//import com.nijikokun.bukkit.Permissions.Permissions;
-//import com.nijiko.permissions.PermissionHandler;
-import org.bukkit.plugin.Plugin;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-import org.yaml.snakeyaml.Yaml;
-
 /**
  * TimeControls for Bukkit
  *
@@ -57,26 +47,12 @@ public class TimePermissions extends JavaPlugin {
     private final TimePermissionsBlockListener blockListener = new TimePermissionsBlockListener(this);
     private final HashMap<Player, Boolean> debugees = new HashMap<Player, Boolean>();
     
-    //public HashMap<String, Integer> playerConfigTime = new HashMap<String, Integer>();
-    public HashMap<Integer,HashMap> configItems = new HashMap<Integer,HashMap>();
-    public HashMap<Integer, String> configGroups = new HashMap<Integer, String>();
-    
-    public int writeDelay;
     public TimeHolder timeHolder = new TimeHolder(this);
     
     public File settingsFile;
     public File playerDataFile;
-    private Timer timeUpdateTimer;
-    private Timer dataSaveTimer;
-    public long initialTime = System.currentTimeMillis();
-    Yaml yaml = null;
 
     public void onEnable() {
-    	DumperOptions options = new DumperOptions();
-        options.setWidth(50);
-        options.setIndent(4);
-        options.setDefaultFlowStyle(FlowStyle.BLOCK);
-        yaml = new Yaml(options);
         
     	loadData();
     	
@@ -119,7 +95,6 @@ public class TimePermissions extends JavaPlugin {
     }
     public void onDisable() {  	
     	timeHolder.stop();
-    	timeHolder.save();
     }
     public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
         String commandName = command.getName().toLowerCase();
@@ -207,8 +182,6 @@ public class TimePermissions extends JavaPlugin {
     	int hours = r / 3600;
     	r = r % 3600;
     	int minutes = r / 60;
-    	r = r % 60;
-    	int seconds = r;
     	
 //    		   (var    <1 ? "" : (var<2     ? var    +" var "     : var    +" vars "    ) )
     	return (weeks>1 || days>1 || hours>1)

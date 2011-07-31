@@ -21,12 +21,5 @@ public class TimePermissionsPlayerListener extends PlayerListener {
     public TimePermissionsPlayerListener(TimePermissions plugin) {
         this.plugin = plugin;
     }
-
-//    public void onPlayerIteract(PlayerInteractEvent event){
-//    	String playerName = event.getPlayer().getName();
-//    	if(!plugin.playerCanUseItem(event.getPlayer(),event.getItem().getType().getId())){
-//    		event.setCancelled(true);
-//    	}
-//    }
 }
 

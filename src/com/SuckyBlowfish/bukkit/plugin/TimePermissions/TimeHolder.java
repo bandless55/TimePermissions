@@ -36,7 +36,7 @@ public class TimeHolder {
 	public void start(){
 		updateTimer=new Timer("UpdateTimer");
 		updateTimer.scheduleAtFixedRate(new updateTask(),1000,1000);
-		saveTimer=new Timer("UpdateTimer");
+		saveTimer=new Timer("SaveTimer");
 		saveTimer.scheduleAtFixedRate(new saveTask(),600000,60000);
 	}
 	
@@ -68,7 +68,7 @@ public class TimeHolder {
 	            }
 	        }
 		} catch (FileNotFoundException e) {
-			System.out.print("[TimePermissions] Data file not found, did *you* fuck this up?");
+			System.out.print("[TimePermissions] Data file not found");
 			e.printStackTrace();
 		} finally{
 			dataScanner.close();
@@ -144,7 +144,7 @@ public class TimeHolder {
 				addPlayer(name);
 				i=mPlayerList.indexOf(name);
 			}
-			mTimeList.add(i,mTimeList.get(i)+1);
+			mTimeList.set(i, mTimeList.get(i)+1);
 		}
 	}
 	
