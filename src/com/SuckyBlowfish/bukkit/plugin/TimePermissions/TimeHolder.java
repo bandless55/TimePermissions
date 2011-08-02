@@ -16,20 +16,33 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class TimeHolder {
-	private final JavaPlugin plugin;
+	private final TimePermissions plugin;
 	private ArrayList<String> mPlayerList = new ArrayList<String>();
 	private ArrayList<Integer> mTimeList = new ArrayList<Integer>();
 //	private ArrayList<ArrayList<Integer>> mTimeList = new ArrayList<ArrayList<Integer>>();
 	private ArrayList<String> mWorldList = new ArrayList<String>();
+	private final Map<Integer,String> mAnnouncements = new HashMap<Integer,String>(){{
+		put(0,      ChatColor.GREEN + "Please welcome our newest member %1$ to the server!");
+		put(3600,   ChatColor.GREEN + "%1$ has played for 1 hour!");
+		put(7200,   ChatColor.GREEN + "%1$ has played for 2 hours!");
+		put(18000,  ChatColor.GREEN + "%1$ has played for 5 hours!");
+		put(25200,  ChatColor.GREEN + "%1$ has played for 7 hours!");
+		put(36000,  ChatColor.GREEN + "%1$ has played for 10 hours!");
+		put(46800,  ChatColor.GREEN + "%1$ has played for 13 hours!");
+		put(86400,  ChatColor.GREEN + "%1$ has played for 1 day!");
+		put(172800, ChatColor.GREEN + "%1$ has played for 2 days!");
+		put(259200, ChatColor.GREEN + "%1$ has played for 3 days!");
+	}};
 	private Timer updateTimer;
 	private Timer saveTimer;
 	private File dataSaveFile = null;
 	
-	public TimeHolder(JavaPlugin plugin){
+	public TimeHolder(TimePermissions plugin){
 		this.plugin = plugin;
 	}
 	
@@ -144,7 +157,9 @@ public class TimeHolder {
 				addPlayer(name);
 				i=mPlayerList.indexOf(name);
 			}
-			mTimeList.set(i, mTimeList.get(i)+1);
+			int time = mTimeList.get(i);
+			if (mAnnouncements.containsKey(time))announceTime(name,time);
+			mTimeList.set(i, time+1);
 		}
 	}
 	
@@ -159,6 +174,12 @@ public class TimeHolder {
 		}
 		else{
 			return null;
+		}
+	}
+	
+	public void announceTime(String name, int time){
+		if (mAnnouncements.containsKey(time)){
+			plugin.getServer().broadcastMessage(String.format(mAnnouncements.get(time), name));
 		}
 	}
 	
