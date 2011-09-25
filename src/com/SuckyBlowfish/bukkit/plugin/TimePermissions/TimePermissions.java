@@ -189,7 +189,7 @@ public class TimePermissions extends JavaPlugin {
     			   (days   <1 ? "" : ((weeks>0)?", ":"")+(days<2    ? days   +" day"    : days   +" days"   ) )+
     	           (hours  <1 ? "" : ((weeks>0|days>0)?", and ":"")+(hours<2   ? hours  +" hour"   : hours  +" hours"  ) )
     	           
-    	       :   (minutes<1 ? "not long." : ((weeks>0|days>0|hours>0)?", ":"")+(minutes<2 ? minutes+" minute" : minutes+" minutes") )+".";
+    	       :   (minutes<1 ? "less then a minute" : ((weeks>0|days>0|hours>0)?", ":"")+(minutes<2 ? minutes+" minute" : minutes+" minutes") )+".";
     }
     private Player matchPlayer(String playerName, CommandSender sender) {
         Player player;

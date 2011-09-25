@@ -27,16 +27,16 @@ public class TimeHolder {
 //	private ArrayList<ArrayList<Integer>> mTimeList = new ArrayList<ArrayList<Integer>>();
 	private ArrayList<String> mWorldList = new ArrayList<String>();
 	private final Map<Integer,String> mAnnouncements = new HashMap<Integer,String>(){{
-		put(0,      ChatColor.GREEN + "Please welcome our newest member %1$ to the server!");
-		put(3600,   ChatColor.GREEN + "%1$ has played for 1 hour!");
-		put(7200,   ChatColor.GREEN + "%1$ has played for 2 hours!");
-		put(18000,  ChatColor.GREEN + "%1$ has played for 5 hours!");
-		put(25200,  ChatColor.GREEN + "%1$ has played for 7 hours!");
-		put(36000,  ChatColor.GREEN + "%1$ has played for 10 hours!");
-		put(46800,  ChatColor.GREEN + "%1$ has played for 13 hours!");
-		put(86400,  ChatColor.GREEN + "%1$ has played for 1 day!");
-		put(172800, ChatColor.GREEN + "%1$ has played for 2 days!");
-		put(259200, ChatColor.GREEN + "%1$ has played for 3 days!");
+		put(0,      ChatColor.GREEN + "Please welcome our newest member %1$s to the server!");
+		put(3600,   ChatColor.GREEN + "%1$s has played for 1 hour!");
+		put(7200,   ChatColor.GREEN + "%1$s has played for 2 hours!");
+		put(18000,  ChatColor.GREEN + "%1$s has played for 5 hours!");
+		put(25200,  ChatColor.GREEN + "%1$s has played for 7 hours!");
+		put(36000,  ChatColor.GREEN + "%1$s has played for 10 hours!");
+		put(46800,  ChatColor.GREEN + "%1$s has played for 13 hours!");
+		put(86400,  ChatColor.GREEN + "%1$s has played for 1 day!");
+		put(172800, ChatColor.GREEN + "%1$s has played for 2 days!");
+		put(259200, ChatColor.GREEN + "%1$s has played for 3 days!");
 	}};
 	private Timer updateTimer;
 	private Timer saveTimer;
