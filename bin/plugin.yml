@@ -1,0 +1,22 @@
+name: TimePermissions
+main: com.SuckyBlowfish.bukkit.plugin.TimePermissions.TimePermissions
+version: 0.8
+website: http://www.google.com/?q=SuckyBlowfish
+author: SuckyBlowfish
+description: >
+             Various ways to control players based on
+             their play-time.
+commands:
+  ptime:
+    description: Checks a player's play-time
+    usage: |
+           /<command>
+            Displays your play-time.
+           /<command> unlocks
+            Displays what you unlock at certain play-times. *Not done yet!*
+           /<command> top [#]
+            Displays the players with the highest play-time.  *Not done yet!*
+           /<command> check [player]
+            Displays another player's play-time.
+           /<command> save
+            Saves the players' ptime data to disk.

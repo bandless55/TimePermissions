@@ -51,6 +51,7 @@ public class TimePermissions extends JavaPlugin {
     
     public File settingsFile;
     public File playerDataFile;
+    public File commandsFile;
 
     public void onEnable() {
         
@@ -78,6 +79,8 @@ public class TimePermissions extends JavaPlugin {
         settingsFile=new File(folder.getAbsolutePath(),"config.yml");
         // Player data file
         playerDataFile=new File(folder.getAbsolutePath(),"data");
+        //Command file
+        commandsFile=new File(folder.getAbsolutePath(), "commands.yml");
         
     	try {
     		if (!this.settingsFile.exists()){
