@@ -95,6 +95,7 @@ public class TimePermissions extends JavaPlugin {
     }
     public void onDisable() {  	
     	timeHolder.stop();
+    	timeHolder.save();
     }
     public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
         String commandName = command.getName().toLowerCase();
@@ -126,9 +127,12 @@ public class TimePermissions extends JavaPlugin {
 //	    			}else if (args.length>2){
 //	    				sender.sendMessage(ChatColor.RED+"Too many arguments.");
 //	    			}
-	    		}else if (args[0].equals("save")){
+        		}else if (args[0].equals("save")){
 	    			timeHolder.save();
 	    			sender.sendMessage(ChatColor.GREEN+"All player times saved to disk!");
+        		}else if (args[0].equals("reload")){
+	    			timeHolder.load();
+	    			sender.sendMessage(ChatColor.GREEN+"New configuration loaded!");
 	    		}else if(args[0].equals("check")||args[0].equals("c")||args[0].equals("get")){
 	    			if (args.length==1){
 	    				sender.sendMessage(ChatColor.RED+"Too few arguments.");

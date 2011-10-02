@@ -17,6 +17,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.bukkit.ChatColor;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,16 +28,20 @@ public class TimeHolder {
 //	private ArrayList<ArrayList<Integer>> mTimeList = new ArrayList<ArrayList<Integer>>();
 	private ArrayList<String> mWorldList = new ArrayList<String>();
 	private final Map<Integer,String> mAnnouncements = new HashMap<Integer,String>(){{
-		put(0,      ChatColor.GREEN + "Please welcome our newest member %1$s to the server!");
-		put(3600,   ChatColor.GREEN + "%1$s has played for 1 hour!");
-		put(7200,   ChatColor.GREEN + "%1$s has played for 2 hours!");
-		put(18000,  ChatColor.GREEN + "%1$s has played for 5 hours!");
-		put(25200,  ChatColor.GREEN + "%1$s has played for 7 hours!");
-		put(36000,  ChatColor.GREEN + "%1$s has played for 10 hours!");
-		put(46800,  ChatColor.GREEN + "%1$s has played for 13 hours!");
-		put(86400,  ChatColor.GREEN + "%1$s has played for 1 day!");
-		put(172800, ChatColor.GREEN + "%1$s has played for 2 days!");
-		put(259200, ChatColor.GREEN + "%1$s has played for 3 days!");
+		put(0,          ChatColor.GREEN + "Please welcome our newest member %1$s to the server!");
+		put(60*60,      ChatColor.GREEN + "%1$s has played for 1 hour!");
+		put(2*60*60,    ChatColor.GREEN + "%1$s has played for 2 hours!");
+		put(5*60*60,    ChatColor.GREEN + "%1$s has played for 5 hours!");
+		put(7*60*60,    ChatColor.GREEN + "%1$s has played for 7 hours!");
+		put(10*60*60,   ChatColor.GREEN + "%1$s has played for 10 hours!");
+		put(13*60*60,   ChatColor.GREEN + "%1$s has played for 13 hours!");
+		put(24*60*60,   ChatColor.GREEN + "%1$s has played for 1 day!");
+		put(2*24*60*60, ChatColor.GREEN + "%1$s has played for 2 days!");
+		put(3*24*60*60, ChatColor.GREEN + "%1$s has played for 3 days!");
+	}};
+	private final Map<Integer,String> mCommands = new HashMap<Integer,String>(){{
+		put(1*60,   "permissions player setgroup %1$s normal");
+		put(2*60,   "permissions player setperm %1$s worldedit");
 	}};
 	private Timer updateTimer;
 	private Timer saveTimer;
@@ -50,7 +55,7 @@ public class TimeHolder {
 		updateTimer=new Timer("UpdateTimer");
 		updateTimer.scheduleAtFixedRate(new updateTask(),1000,1000);
 		saveTimer=new Timer("SaveTimer");
-		saveTimer.scheduleAtFixedRate(new saveTask(),600000,60000);
+		saveTimer.scheduleAtFixedRate(new saveTask(),10*60*1000,60000);
 	}
 	
 	public void stop(){
@@ -87,6 +92,10 @@ public class TimeHolder {
 			dataScanner.close();
 		}
 	}	
+	
+	public void load(){
+		load(dataSaveFile);
+	}
 	
 	public void save(){
 		if (dataSaveFile!=null){
@@ -158,8 +167,10 @@ public class TimeHolder {
 				i=mPlayerList.indexOf(name);
 			}
 			int time = mTimeList.get(i);
-			if (mAnnouncements.containsKey(time))announceTime(name,time);
 			mTimeList.set(i, time+1);
+			
+			if (mAnnouncements.containsKey(time))announceTime(name,time);
+			if (mCommands.containsKey(time))runCommand(name,time);
 		}
 	}
 	
@@ -180,6 +191,15 @@ public class TimeHolder {
 	public void announceTime(String name, int time){
 		if (mAnnouncements.containsKey(time)){
 			plugin.getServer().broadcastMessage(String.format(mAnnouncements.get(time), name));
+		}
+	}
+	
+	public void runCommand(String name, int time){
+		if (mCommands.containsKey(time)){
+			plugin.getServer().dispatchCommand(
+					new ConsoleCommandSender(plugin.getServer()),
+					String.format(mCommands.get(time), name)
+			);
 		}
 	}
 	
